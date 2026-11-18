@@ -1,0 +1,37 @@
+name: Temperature analysis validation
+
+on:
+  pull_request:
+    paths:
+      - "temperature_analysis/**"
+      - "TEMP_ANNUAL_SEASONAL_MEAN.csv"
+      - "requirements.txt"
+      - ".github/workflows/temperature-analysis.yml"
+  push:
+    branches:
+      - temperature-project-upgrade
+
+jobs:
+  run-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Compile Python source
+        run: python -m py_compile temperature_analysis/run_analysis.py
+      - name: Run full analysis
+        run: python temperature_analysis/run_analysis.py
+      - name: Verify generated outputs
+        run: |
+          test -f temperature_analysis/outputs/results_report.md
+          test -f temperature_analysis/outputs/tables/holdout_metrics.csv
+          test -f temperature_analysis/outputs/tables/cross_validation_scores.csv
+          test -f temperature_analysis/outputs/figures/temperature_series.png
